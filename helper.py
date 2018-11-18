@@ -11,7 +11,6 @@ from glob import glob
 from urllib.request import urlretrieve
 from tqdm import tqdm
 
-
 class DLProgress(tqdm):
     last_block = 0
 
@@ -19,7 +18,6 @@ class DLProgress(tqdm):
         self.total = total_size
         self.update((block_num - self.last_block) * block_size)
         self.last_block = block_num
-
 
 def maybe_download_pretrained_vgg(data_dir):
     """
@@ -56,7 +54,6 @@ def maybe_download_pretrained_vgg(data_dir):
 
         # Remove zip file to save space
         os.remove(os.path.join(vgg_path, vgg_filename))
-
 
 def gen_batch_function(data_folder, image_shape):
     """
@@ -97,7 +94,6 @@ def gen_batch_function(data_folder, image_shape):
             yield np.array(images), np.array(gt_images)
     return get_batches_fn
 
-
 def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape):
     """
     Generate test output using the test images
@@ -124,7 +120,6 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
 
         yield os.path.basename(image_file), np.array(street_im)
 
-
 def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
     # Make folder for current run
     output_dir = os.path.join(runs_dir, str(time.time()))
@@ -138,3 +133,33 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
         sess, logits, keep_prob, input_image, os.path.join(data_dir, 'data_road/testing'), image_shape)
     for name, image in image_outputs:
         scipy.misc.imsave(os.path.join(output_dir, name), image)
+
+def flip(img, gt_img):
+	if np.random.random() > 0.5:
+		img = np.fliplr(img)
+		gt_img = np.fliplr(gt_img)
+
+	return img, gt_img
+
+def trans(img, gt_img):
+	rows, cols, _ = img.shape
+
+	if np.random.random() > 0.5:
+		trans_size = 64
+		trans = int(np.random.uniform(-trans_size, trans_size, 1))
+
+		trans_M = np.float32([[1, 0, trans], [0, 1, 0]])
+		img = cv2.warpAffine(img, trans_M, (cols, rows))
+		gt_img = cv2.warpAffine(gt_img, trans_M, (cols, rows))
+
+	return img, gt_img
+
+def bright_improve(img):
+	if np.random.random() > 0.5:
+		img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+		rand_bright = 0.314 + np.random.uniform()
+
+		img[:,:,2] = img[:,:,2] * rand_bright
+		img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+
+	return img
