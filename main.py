@@ -187,7 +187,7 @@ def run():
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logit, keep_prob, img_in)
         #  helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
 
-        saver.save(sess, './runs/model.ckpt')
+        save.save(sess, './runs/model.ckpt')
 
         # OPTIONAL: Apply the trained model to a video
 
