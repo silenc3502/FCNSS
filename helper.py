@@ -133,33 +133,3 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
         sess, logits, keep_prob, input_image, os.path.join(data_dir, 'data_road/testing'), image_shape)
     for name, image in image_outputs:
         scipy.misc.imsave(os.path.join(output_dir, name), image)
-
-def flip(img, gt_img):
-	if np.random.random() > 0.5:
-		img = np.fliplr(img)
-		gt_img = np.fliplr(gt_img)
-
-	return img, gt_img
-
-def trans(img, gt_img):
-	rows, cols, _ = img.shape
-
-	if np.random.random() > 0.5:
-		trans_size = 64
-		trans = int(np.random.uniform(-trans_size, trans_size, 1))
-
-		trans_M = np.float32([[1, 0, trans], [0, 1, 0]])
-		img = cv2.warpAffine(img, trans_M, (cols, rows))
-		gt_img = cv2.warpAffine(gt_img, trans_M, (cols, rows))
-
-	return img, gt_img
-
-def bright_improve(img):
-	if np.random.random() > 0.5:
-		img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-		rand_bright = 0.314 + np.random.uniform()
-
-		img[:,:,2] = img[:,:,2] * rand_bright
-		img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
-
-	return img
