@@ -32,9 +32,14 @@ def load_vgg(sess, vgg_path):
     vgg_layer4_out_tensor_name = 'layer4_out:0'
     vgg_layer7_out_tensor_name = 'layer7_out:0'
 
+    # It based VGG Neural Network.
+    # We can load the model from a SavedModel as specified by tags with
+    # tf.saved_model.loader.load() function.
     tf.saved_model.loader.load(sess, [vgg_tag], vgg_path)
 
+    # We use tf.get_default_graph() for use import things.
     graph = tf.get_default_graph()
+    # We can load placeholder with graph.get_tensor_by_name() function.
     img_in = graph.get_tensor_by_name(vgg_input_tensor_name)
     keep_prob = graph.get_tensor_by_name(vgg_keep_prob_tensor_name)
     layer3_out = graph.get_tensor_by_name(vgg_layer3_out_tensor_name)
@@ -56,6 +61,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     # TODO: Implement function
 	# Implement Layer Function
+	# Use 2D Convolution
     conv7 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, strides=(1, 1), padding='same',
                              kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
                              kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
@@ -104,8 +110,13 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     logit = tf.reshape(nn_last_layer, (-1, num_classes))
     correct_label = tf.reshape(correct_label, (-1, num_classes))
 
+    # Get all of mean value with tf.reduce_mean() function.
+    # We use tf.nn.softmax_cross_entropy_with_logits() function
+    # for Non-Normalized Logits.
+    # It activated SoftMax!
     entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=correct_label, logits=logit))
 
+    # Make Training Label
     with tf.name_scope("training"):
         optimizer = tf.train.AdamOptimizer()
         glob_step = tf.Variable(0, name='glob_step', trainable=False)
@@ -132,6 +143,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param learning_rate: TF Placeholder for learning rate
     """
     # TODO: Implement function
+    # Do train & Print Loss
     for epoch in range(epochs):
         for i, (img, label) in enumerate(get_batches_fn(batch_size)):
             _, loss = sess.run([train_op, cross_entropy_loss],
@@ -142,6 +154,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
 # tests.test_train_nn(train_nn)
 
 def run():
+    # We do it 30 epochs
     epochs = 30
     batches = 2
 
@@ -158,8 +171,10 @@ def run():
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
 
+    # Clears the default graph stack and resets the global default graph.
     tf.reset_default_graph()
 
+	# Launch the graph in a session.
     with tf.Session() as sess:
         # Path to vgg model
         vgg_path = os.path.join(data_dir, 'vgg')
@@ -170,16 +185,27 @@ def run():
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
         # TODO: Build NN using load_vgg, layers, and optimize function
+        # Use load_vgg to get proper layer.
         img_in, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
+
+        # Use layers function to do Convolution Operation.
         final_layer = layers(layer3_out, layer4_out, layer7_out, num_classes)
+
+        # Ready to use the other Tensor [None, None, None, num_classes]
         label = tf.placeholder(tf.int32, shape=[None, None, None, num_classes])
         learning_rate = tf.placeholder(tf.float32)
+
+        # Use optimize function to get loss.
         logit, train_op, loss = optimize(final_layer, label, learning_rate, num_classes)
 
         save = tf.train.Saver()
 
         # TODO: Train NN using the train_nn function
+        # Add op to initialize variable
+        # that can be do with tf.global_variables_initializer() function.
         sess.run(tf.global_variables_initializer())
+
+        # Use train_nn() function to do training!
         train_nn(sess, epochs, batches, get_batches_fn, train_op,
                  loss, img_in, label, keep_prob, learning_rate)
 
