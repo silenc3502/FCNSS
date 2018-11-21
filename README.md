@@ -2,6 +2,16 @@
 ### Introduction
 In this project, you'll label the pixels of a road in images using a Fully Convolutional Network (FCN).
 
+### Achievement
+
+This is the result image.  
+
+![res](./img/res.png)
+
+We can see the avg loss comes down at below image.  
+
+![avg_loss](./img/avg_loss.png)
+
 ### Setup
 ##### GPU
 `main.py` will check to make sure you are using GPU - if you don't have a GPU on your system, you can use AWS or another cloud computing platform.
